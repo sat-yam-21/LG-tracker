@@ -1,40 +1,18 @@
-# Welcome to your Lovable project
+# Welcome to Our LG warrenty tracker project
+
+# Author
+SATYAM PATEL,HARSHIT RATHORE
 
 ## Project info
+This project we have made for our internship with 'LG INDIA PVT LTD'.Project is built using Vite + React + TypeScript with Tailwind CSS and shadcn-ui components.
+For more info vist our site 
+URL:
 
-**URL**: https://lovable.dev/projects/91468ed4-e1f9-4f98-972a-511d3709265c
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/91468ed4-e1f9-4f98-972a-511d3709265c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Follow these steps to set up the project locally:
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
-```
 
 **Edit a file directly in GitHub**
 
@@ -59,15 +37,5 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/91468ed4-e1f9-4f98-972a-511d3709265c) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Git
+- GitHub Codespaces

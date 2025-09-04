@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ const ReminderSettings = () => {
     email: "",
     phoneNumber: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -34,7 +37,7 @@ const ReminderSettings = () => {
     }
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
     if (settings.emailEnabled && !settings.email) {
       toast({
@@ -47,20 +50,53 @@ const ReminderSettings = () => {
 
     if (settings.smsEnabled && !settings.phoneNumber) {
       toast({
-        title: "Error", 
+        title: "Error",
         description: "Please enter a phone number for SMS reminders.",
         variant: "destructive",
       });
       return;
     }
 
-    // Save to localStorage
-    localStorage.setItem('warrantyReminderSettings', JSON.stringify(settings));
-    
-    toast({
-      title: "Settings Saved",
-      description: "Your reminder preferences have been saved successfully.",
-    });
+    setIsLoading(true);
+
+    // Hardcoded for now, you would get this from your auth system
+    const userId = "user123";
+
+    try {
+      const response = await fetch(`/api/reminder-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          email: settings.email,
+          phoneNumber: settings.smsEnabled ? settings.phoneNumber : null,
+          reminderDays: settings.daysBeforeExpiry,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save settings.');
+      }
+      
+      // Save to localStorage as a fallback or for optimistic UI
+      localStorage.setItem('warrantyReminderSettings', JSON.stringify(settings));
+      
+      toast({
+        title: "Settings Saved",
+        description: "Your reminder preferences have been saved successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save reminder settings. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateSettings = (key: keyof ReminderSettings, value: any) => {
@@ -174,14 +210,23 @@ const ReminderSettings = () => {
                 ? "email notifications" 
                 : settings.smsEnabled 
                 ? "SMS notifications" 
-                : "no notifications"} {" "}
+                : "no notifications"}{" "}
               {settings.daysBeforeExpiry} days before your warranty expires.
             </p>
           </div>
 
-          <Button onClick={handleSave} className="w-full">
-            <Save className="h-4 w-4 mr-2" />
-            Save Reminder Settings
+          <Button onClick={handleSave} className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Reminder Settings
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>

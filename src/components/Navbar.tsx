@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom";
-import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -18,7 +17,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" />
+            <img src="/favicon.png" alt="logo" className="h-8 w-8" />
             <div>
               <h1 className="text-xl font-bold text-foreground">LG Warranty Manager</h1>
             </div>

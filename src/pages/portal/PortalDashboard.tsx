@@ -1,7 +1,10 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Package, 
   Shield, 
@@ -12,8 +15,13 @@ import {
   Bell,
   CheckCircle
 } from "lucide-react";
+import { useState } from "react";
 
 const PortalDashboard = () => {
+  // State for the new product form
+  const [productName, setProductName] = useState("");
+  const [warrantyEndDate, setWarrantyEndDate] = useState("");
+
   // Mock data - would come from backend/database
   const stats = {
     totalProducts: 5,
@@ -64,6 +72,49 @@ const PortalDashboard = () => {
         return <Badge>Unknown</Badge>;
     }
   };
+
+  const handleAddProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const apiUrl = process.env.NEXT_PUBLIC_WARRANTY_API_URL;
+
+    if (!apiUrl) {
+      console.error("API URL is not defined. Please check your .env.local file.");
+      return;
+    }
+
+    // Hardcoded for now, you would get this from your auth system
+    const userId = "user123"; 
+
+    try {
+      const response = await fetch(`${apiUrl}/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          productName,
+          // Append time to the date to make it a valid ISO 8601 string
+          warrantyEndDate: `${warrantyEndDate}T00:00:00.000Z`, 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Product created successfully:", result);
+        // Clear form
+        setProductName("");
+        setWarrantyEndDate("");
+        // Here you would typically refresh the product list
+      } else {
+        console.error("Failed to create product:", result.message);
+      }
+    } catch (error) {
+      console.error("An error occurred while adding the product:", error);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -212,23 +263,38 @@ const PortalDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Register New Product Form */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Register New Product</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
-              <Package className="h-4 w-4 mr-2" />
-              Register New Product
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Shield className="h-4 w-4 mr-2" />
-              Renew Warranty
-            </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Bell className="h-4 w-4 mr-2" />
-              Set Reminders
-            </Button>
+          <CardContent>
+            <form onSubmit={handleAddProduct} className="space-y-4">
+              <div>
+                <Label htmlFor="productName">Product Name</Label>
+                <Input
+                  id="productName"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  placeholder="e.g., LG Air Conditioner"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="warrantyEndDate">Warranty End Date</Label>
+                <Input
+                  id="warrantyEndDate"
+                  type="date"
+                  value={warrantyEndDate}
+                  onChange={(e) => setWarrantyEndDate(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                <Package className="h-4 w-4 mr-2" />
+                Add Product
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
