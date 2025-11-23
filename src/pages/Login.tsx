@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,11 +13,12 @@ const Login = () => {
     email: "",
     password: "",
   });
+
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       toast({
         title: "Missing Information",
@@ -27,16 +28,36 @@ const Login = () => {
       return;
     }
 
-    // Mock login - would connect to Supabase authentication
-    toast({
-      title: "Login Successful",
-      description: "Redirecting to portal... (Mock login - connect Supabase for real authentication)",
-    });
-    
-    // Mock redirect after short delay
-    setTimeout(() => {
-      navigate('/portal');
-    }, 1500);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // ✅ Save user data + token
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+
+      toast({
+        title: "Login Successful",
+        description: "Redirecting to portal...",
+      });
+
+      navigate("/portal");
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -60,7 +81,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="Enter your email"
-                  className="pl-10 transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
+                  className="pl-10"
                 />
               </div>
             </div>
@@ -75,7 +96,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Enter your password"
-                  className="pl-10 pr-10 transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
+                  className="pl-10 pr-10"
                 />
                 <button
                   type="button"
@@ -87,9 +108,9 @@ const Login = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-primary to-lg-red-light hover:from-lg-red-light hover:to-primary transition-all duration-300 shadow-[var(--shadow-elegant)] hover:shadow-lg"
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-primary to-lg-red-light hover:from-lg-red-light hover:to-primary transition-all duration-300"
             >
               Sign In
             </Button>
@@ -98,20 +119,12 @@ const Login = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link 
-                to="/register" 
-                className="text-primary hover:text-lg-red-light transition-colors duration-300 font-medium"
-              >
+              <Link to="/register" className="text-primary hover:text-lg-red-light font-medium">
                 Sign up
               </Link>
             </p>
           </div>
 
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground text-center">
-              ⚠️ This is a UI mockup. Connect to Supabase for full authentication functionality.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

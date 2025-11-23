@@ -7,40 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { CalendarIcon } from "lucide-react";
 
-interface Product {
-  id: string;
-  productName: string;
-  category: string;
-  model: string;
-  purchaseDate: string;
-  warrantyPeriod: number;
-  serialNumber: string;
-  email: string;
-}
-
-interface ProductRegistrationFormProps {
-  onProductAdded: (product: Product) => void;
-}
-
-const lgCategories = [
-  "Refrigerators",
-  "Washing Machines", 
-  "Air Conditioners",
-  "TVs & Audio",
-  "Mobile Phones",
-  "Laptops & Monitors",
-  "Home Appliances",
-  "Kitchen Appliances"
-];
-
-const warrantyOptions = [
-  { value: 12, label: "1 Year" },
-  { value: 24, label: "2 Years" },
-  { value: 36, label: "3 Years" },
-  { value: 60, label: "5 Years" },
-];
-
-export const ProductRegistrationForm = ({ onProductAdded }: ProductRegistrationFormProps) => {
+export const ProductRegistrationForm = () => {
   const [formData, setFormData] = useState({
     productName: "",
     category: "",
@@ -50,15 +17,52 @@ export const ProductRegistrationForm = ({ onProductAdded }: ProductRegistrationF
     serialNumber: "",
     email: "",
   });
+
   const [isLoading, setIsLoading] = useState(false);
+
+  const lgCategories = [
+    "Refrigerators",
+    "Washing Machines",
+    "Air Conditioners",
+    "TVs & Audio",
+    "Mobile Phones",
+    "Laptops & Monitors",
+    "Home Appliances",
+    "Kitchen Appliances",
+  ];
+
+  const warrantyOptions = [
+    { value: "12", label: "1 Year" },
+    { value: "24", label: "2 Years" },
+    { value: "36", label: "3 Years" },
+    { value: "60", label: "5 Years" },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.productName || !formData.category || !formData.purchaseDate || !formData.warrantyPeriod || !formData.email) {
+
+    // get user info
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!storedUser.id) {
       toast({
-        title: "Missing Information", 
-        description: "Please fill in all required fields.",
+        title: "Not Logged In",
+        description: "Please login before registering a product.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      !formData.productName ||
+      !formData.category ||
+      !formData.purchaseDate ||
+      !formData.warrantyPeriod ||
+      !formData.email
+    ) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill all required fields.",
         variant: "destructive",
       });
       return;
@@ -66,33 +70,35 @@ export const ProductRegistrationForm = ({ onProductAdded }: ProductRegistrationF
 
     setIsLoading(true);
 
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      productName: formData.productName,
+    const payload = {
+      user_id: storedUser.id,
+      product_name: formData.productName,
       category: formData.category,
-      model: formData.model,
-      purchaseDate: formData.purchaseDate,
-      warrantyPeriod: parseInt(formData.warrantyPeriod),
-      serialNumber: formData.serialNumber,
+      model_number: formData.model,
+      serial_number: formData.serialNumber,
+      purchase_date: formData.purchaseDate,
+      warranty_period: formData.warrantyPeriod,
       email: formData.email,
     };
 
     try {
-      const response = await fetch("/api/register-product", {
+      const response = await fetch("http://127.0.0.1:8000/add-product", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newProduct),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to register product.");
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || "Failed to register product.");
       }
 
-      onProductAdded(newProduct);
-      
+      toast({
+        title: "Product Registered",
+        description: "Your LG product has been successfully registered.",
+      });
+
       setFormData({
         productName: "",
         category: "",
@@ -103,15 +109,10 @@ export const ProductRegistrationForm = ({ onProductAdded }: ProductRegistrationF
         email: "",
       });
 
-      toast({
-        title: "Product Registered",
-        description: "Your LG product has been successfully registered for warranty tracking.",
-      });
-
     } catch (error: any) {
       toast({
         title: "Registration Failed",
-        description: error.message || "Could not save your product. Please try again.",
+        description: error.message || "Could not save your product.",
         variant: "destructive",
       });
     } finally {
@@ -124,124 +125,138 @@ export const ProductRegistrationForm = ({ onProductAdded }: ProductRegistrationF
       <CardHeader className="bg-gradient-to-r from-primary to-lg-red-light text-primary-foreground">
         <CardTitle className="text-2xl">Register Your LG Product</CardTitle>
         <CardDescription className="text-primary-foreground/80">
-          Add your LG product details to track warranty expiration
+          Add your LG product to track warranty expiration
         </CardDescription>
       </CardHeader>
+
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {/* Product Name */}
             <div className="space-y-2">
-              <Label htmlFor="productName">Product Name *</Label>
+              <Label>Product Name *</Label>
               <Input
-                id="productName"
                 value={formData.productName}
-                onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, productName: e.target.value })
+                }
                 placeholder="e.g., LG ThinQ Refrigerator"
-                className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
                 disabled={isLoading}
               />
             </div>
 
+            {/* Category */}
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select 
-                value={formData.category} 
-                onValueChange={(value) => setFormData({ ...formData, category: value })} 
+              <Label>Category *</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => setFormData({ ...formData, category: value })}
                 disabled={isLoading}
               >
-                <SelectTrigger className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]">
-                  <SelectValue placeholder="Select product category" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {lgCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                  {lgCategories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Model Number */}
             <div className="space-y-2">
-              <Label htmlFor="model">Model Number</Label>
+              <Label>Model Number</Label>
               <Input
-                id="model"
                 value={formData.model}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, model: e.target.value })
+                }
                 placeholder="e.g., GR-X247CSAV"
-                className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
                 disabled={isLoading}
               />
             </div>
 
+            {/* Serial Number */}
             <div className="space-y-2">
-              <Label htmlFor="serialNumber">Serial Number</Label>
+              <Label>Serial Number</Label>
               <Input
-                id="serialNumber"
                 value={formData.serialNumber}
-                onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, serialNumber: e.target.value })
+                }
                 placeholder="e.g., 123ABC456DEF"
-                className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
                 disabled={isLoading}
               />
             </div>
 
+            {/* Purchase Date */}
             <div className="space-y-2">
-              <Label htmlFor="purchaseDate">Purchase Date *</Label>
+              <Label>Purchase Date *</Label>
               <div className="relative">
                 <Input
-                  id="purchaseDate"
                   type="date"
                   value={formData.purchaseDate}
-                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                  className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
+                  onChange={(e) =>
+                    setFormData({ ...formData, purchaseDate: e.target.value })
+                  }
                   disabled={isLoading}
                 />
                 <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
+            {/* Warranty */}
             <div className="space-y-2">
-              <Label htmlFor="warrantyPeriod">Warranty Period *</Label>
-              <Select 
-                value={formData.warrantyPeriod} 
-                onValueChange={(value) => setFormData({ ...formData, warrantyPeriod: value })} 
+              <Label>Warranty Period *</Label>
+              <Select
+                value={formData.warrantyPeriod}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, warrantyPeriod: value })
+                }
                 disabled={isLoading}
               >
-                <SelectTrigger className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]">
-                  <SelectValue placeholder="Select warranty period" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>
-                  {warrantyOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
+                  {warrantyOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Email */}
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="email">Email Address *</Label>
+              <Label>Email Address *</Label>
               <Input
-                id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="e.g., john.doe@example.com"
-                className="transition-all duration-300 focus:shadow-[var(--shadow-elegant)]"
                 disabled={isLoading}
               />
             </div>
+
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-r from-primary to-lg-red-light hover:from-lg-red-light hover:to-primary transition-all duration-300 shadow-[var(--shadow-elegant)] hover:shadow-lg"
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-primary to-lg-red-light hover:from-lg-red-light hover:to-primary"
             disabled={isLoading}
           >
             {isLoading ? "Registering..." : "Register Product"}
           </Button>
+
         </form>
       </CardContent>
     </Card>
